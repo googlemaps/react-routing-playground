@@ -7,7 +7,7 @@
     "@googlemaps/react-wrapper": "^1.1.17",
     "@testing-library/jest-dom": "^5.16.1",
     "@testing-library/react": "^12.1.2",
-    "@testing-library/user-event": "^13.5.0",
+    "@testing-library/user-event": "^14.2.0",
     "axios": "^0.24.0",
     "deck.gl": "^8.6.5",
     "googleapis": "^89.0.0",
