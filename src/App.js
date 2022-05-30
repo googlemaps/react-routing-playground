@@ -21,7 +21,6 @@
  * propagation for state changes into the non-react map
  */
 import React from "react";
-import { registerHandlers } from "./Map";
 import Map from "./Map";
 import Select from "react-select";
 import { algoOptions, metroOptions } from "./Data";
@@ -103,18 +102,21 @@ class App extends React.Component {
       this.setState({ showSpinner: true, regenData: true });
     };
 
-    // There must be a better way to handle cross
-    // component communication
-    registerHandlers((chartData) => {
+    this.onChartDataUpdate = (chartData) => {
       this.setState((prevState) => {
-        prevState.showSpinner = false;
-        prevState.regenData = false;
-        prevState.chartData.latencyData = chartData.latencyData;
-        prevState.chartData.distanceData = chartData.distanceData;
-        prevState.chartData.durationData = chartData.durationData;
-        return prevState;
+        return {
+          selectedMetroOption: prevState.selectedMetroOption,
+          selectedAlgoOption: prevState.selectedAlgoOption,
+          showSpinner: false,
+          regenData: false,
+          chartData: {
+            latencyData: chartData.latencyData,
+            distanceData: chartData.distanceData,
+            durationData: chartData.durationData,
+          },
+        };
       });
-    });
+    };
 
     this.downloadData = async () => {
       const metro = this.state.selectedMetroOption.value;
@@ -175,6 +177,7 @@ class App extends React.Component {
             metro={this.state.selectedMetroOption.value}
             algo={this.state.selectedAlgoOption.value}
             regenData={this.state.regenData}
+            onChartDataUpdate={this.onChartDataUpdate}
           />
         </div>
       </div>

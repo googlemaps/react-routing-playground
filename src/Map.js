@@ -31,7 +31,6 @@ const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 let googleMap;
 let shownPolys = [];
 let shownMarkers = [];
-let chartDataHandler;
 
 const render = (status) => {
   if (status === Status.LOADING) return <h3>{status} ..</h3>;
@@ -50,7 +49,7 @@ function initializeMapObject(element) {
   });
 }
 
-function MyMapComponent({ metro, algo, regenData }) {
+function MyMapComponent({ metro, algo, regenData, onChartDataUpdate }) {
   const ref = useRef();
 
   /*
@@ -143,7 +142,7 @@ function MyMapComponent({ metro, algo, regenData }) {
       return poly;
     });
 
-    chartDataHandler(await GetChartData(googleMap, metro, algo));
+    onChartDataUpdate(await GetChartData(googleMap, metro, algo));
   }, 100);
 
   useEffect(() => {
@@ -193,7 +192,7 @@ function MyMapComponent({ metro, algo, regenData }) {
   return <div ref={ref} id="map" style={{ height: "1024px" }} />;
 }
 
-function Map({ metro, algo, regenData }) {
+function Map(props) {
   return (
     <Wrapper
       apiKey={apiKey}
@@ -201,7 +200,12 @@ function Map({ metro, algo, regenData }) {
       version="beta"
       libraries={["geometry", "journeySharing"]}
     >
-      <MyMapComponent metro={metro} algo={algo} regenData={regenData} />
+      <MyMapComponent
+        metro={props.metro}
+        algo={props.algo}
+        regenData={props.regenData}
+        onChartDataUpdate={props.onChartDataUpdate}
+      />
     </Wrapper>
   );
 }
@@ -232,8 +236,4 @@ const endSymbol = {
 };
 */
 
-function registerHandlers(newChartDataHandler) {
-  chartDataHandler = newChartDataHandler;
-}
-
-export { Map as default, registerHandlers };
+export { Map as default };
