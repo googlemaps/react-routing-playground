@@ -52,10 +52,11 @@ function initializeMapObject(element) {
   });
 }
 
-function MyMapComponent() {
+function MyMapComponent({ metro, algo }) {
   const ref = useRef();
 
   useEffect(() => {
+    console.log("Gots apikey", apiKey);
     map = initializeMapObject(ref.current);
 
     // Polygons should really have a getBounds method (v2 maps did).
@@ -76,15 +77,27 @@ function MyMapComponent() {
         return bounds;
       };
     }
-    fitToMetroBounds(map, currentMetro);
+  }, []);
+
+  useEffect(() => {
+    console.log("on metro change", metro);
+    currentMetro = metro;
+    if (window.google && window.google.maps) {
+      fitToMetroBounds(map, metro);
+    }
     onStateChangeDebounced();
-  });
+  }, [metro]);
+
+  useEffect(() => {
+    console.log("on algo change", algo);
+    currentAlgo = algo;
+    onStateChangeDebounced();
+  }, [algo]);
 
   return <div ref={ref} id="map" style={{ height: "1024px" }} />;
 }
 
-function Map() {
-  console.log("Gots apikey", apiKey);
+function Map({ metro, algo }) {
   return (
     <Wrapper
       apiKey={apiKey}
@@ -92,24 +105,9 @@ function Map() {
       version="beta"
       libraries={["geometry", "journeySharing"]}
     >
-      <MyMapComponent />
+      <MyMapComponent metro={metro} algo={algo} />
     </Wrapper>
   );
-}
-
-function onMetroChange(metro) {
-  console.log("on metro change", metro);
-  currentMetro = metro;
-  if (window.google && window.google.maps) {
-    fitToMetroBounds(map, metro);
-  }
-  onStateChangeDebounced();
-}
-
-function onAlgoChange(algo) {
-  console.log("on algo change", algo);
-  currentAlgo = algo;
-  onStateChangeDebounced();
 }
 
 function onInitializeRegen() {
@@ -240,10 +238,4 @@ function registerHandlers(newChartDataHandler) {
   chartDataHandler = newChartDataHandler;
 }
 
-export {
-  Map as default,
-  onMetroChange,
-  onAlgoChange,
-  registerHandlers,
-  onInitializeRegen,
-};
+export { Map as default, registerHandlers, onInitializeRegen };
