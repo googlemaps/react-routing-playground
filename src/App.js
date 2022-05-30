@@ -100,7 +100,10 @@ class App extends React.Component {
 
     this.regenerateData = () => {
       this.setState({ showSpinner: true }, () => {
-        onInitializeRegen();
+        onInitializeRegen(
+          this.state.selectedMetroOption.value,
+          this.state.selectedAlgoOption.value
+        );
       });
     };
 

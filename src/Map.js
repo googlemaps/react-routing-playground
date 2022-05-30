@@ -29,8 +29,6 @@ import { fitToMetroBounds } from "./Data";
 
 const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 let map;
-let currentMetro;
-let currentAlgo;
 let shownPolys = [];
 let shownMarkers = [];
 let chartDataHandler;
@@ -81,17 +79,15 @@ function MyMapComponent({ metro, algo }) {
 
   useEffect(() => {
     console.log("on metro change", metro);
-    currentMetro = metro;
     if (window.google && window.google.maps) {
       fitToMetroBounds(map, metro);
     }
-    onStateChangeDebounced();
+    onStateChangeDebounced(metro, algo);
   }, [metro]);
 
   useEffect(() => {
     console.log("on algo change", algo);
-    currentAlgo = algo;
-    onStateChangeDebounced();
+    onStateChangeDebounced(metro, algo);
   }, [algo]);
 
   return <div ref={ref} id="map" style={{ height: "1024px" }} />;
@@ -110,9 +106,9 @@ function Map({ metro, algo }) {
   );
 }
 
-function onInitializeRegen() {
+function onInitializeRegen(metro, algo) {
   console.log("regenerating data for current algo / metro");
-  onStateChangeDebounced(/*regenerate =*/ true);
+  onStateChangeDebounced(metro, algo, /*regenerate =*/ true);
 }
 
 const startSymbol = {
@@ -149,90 +145,93 @@ const endSymbol = {
  * Debounced to every 100ms as a blance between performance and reactivity when
  * the slider is dragged.
  */
-const onStateChangeDebounced = debounce(async (regenerate = false) => {
-  if (!window.google) {
-    // not loaded yet?
-    return;
-  }
-  console.log("State changed", currentMetro, currentAlgo);
-  shownPolys.forEach((poly) => poly.setMap(null));
-  shownMarkers.forEach((marker) => marker.setMap(null));
-  shownMarkers = [];
-  let routes = await GetRoutes(map, currentMetro, currentAlgo, regenerate);
-  shownPolys = routes.map((route) => {
-    const routePath = route.getPath();
-    const poly = new google.maps.Polyline({
-      path: route.getPath(),
-      strokeColor: "#000000",
-      strokeOpacity: routes.length > 10 ? 0.15 : 0.5,
-      strokeWeight: 5,
-      icons: [
-        {
-          icon: startSymbol,
-          offset: "0%",
-        },
-        {
-          icon: {
-            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-            scale: 4,
-            strokeWeight: 2,
-          },
-
-          offset: "50%",
-        },
-        {
-          icon: endSymbol,
-          offset: "100%",
-        },
-      ],
-    });
-    poly.setMap(map);
-    google.maps.event.addListener(poly, "mouseover", () => {
-      poly.setOptions({
-        strokeOpacity: 0.75,
-        strokeWeight: 8,
-        strokeColor: "#00FFc0",
-      });
-    });
-    google.maps.event.addListener(poly, "mouseout", () => {
-      poly.setOptions({
-        strokeOpacity: 0.25,
+const onStateChangeDebounced = debounce(
+  async (metro, algo, regenerate = false) => {
+    if (!window.google) {
+      // not loaded yet?
+      return;
+    }
+    console.log("State changed", metro, algo);
+    shownPolys.forEach((poly) => poly.setMap(null));
+    shownMarkers.forEach((marker) => marker.setMap(null));
+    shownMarkers = [];
+    let routes = await GetRoutes(map, metro, algo, regenerate);
+    shownPolys = routes.map((route) => {
+      const routePath = route.getPath();
+      const poly = new google.maps.Polyline({
+        path: route.getPath(),
         strokeColor: "#000000",
+        strokeOpacity: routes.length > 10 ? 0.15 : 0.5,
         strokeWeight: 5,
+        icons: [
+          {
+            icon: startSymbol,
+            offset: "0%",
+          },
+          {
+            icon: {
+              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+              scale: 4,
+              strokeWeight: 2,
+            },
+
+            offset: "50%",
+          },
+          {
+            icon: endSymbol,
+            offset: "100%",
+          },
+        ],
       });
-    });
-    const waypoints = route.getWaypointMarkers();
-    if (waypoints.length > 1) {
-      waypoints.map((markerLoc, idx) => {
+      poly.setMap(map);
+      google.maps.event.addListener(poly, "mouseover", () => {
+        poly.setOptions({
+          strokeOpacity: 0.75,
+          strokeWeight: 8,
+          strokeColor: "#00FFc0",
+        });
+      });
+      google.maps.event.addListener(poly, "mouseout", () => {
+        poly.setOptions({
+          strokeOpacity: 0.25,
+          strokeColor: "#000000",
+          strokeWeight: 5,
+        });
+      });
+      const waypoints = route.getWaypointMarkers();
+      if (waypoints.length > 1) {
+        waypoints.map((markerLoc, idx) => {
+          shownMarkers.push(
+            new google.maps.Marker({
+              position: markerLoc,
+              // Humans like to start with 1
+              label: (idx + 1).toString(),
+              map: map,
+            })
+          );
+        });
         shownMarkers.push(
           new google.maps.Marker({
-            position: markerLoc,
-            // Humans like to start with 1
-            label: (idx + 1).toString(),
+            position: routePath[0],
+            label: "S",
             map: map,
           })
         );
-      });
-      shownMarkers.push(
-        new google.maps.Marker({
-          position: routePath[0],
-          label: "S",
-          map: map,
-        })
-      );
-      shownMarkers.push(
-        new google.maps.Marker({
-          position: routePath[routePath.length - 1],
-          label: "F",
-          map: map,
-        })
-      );
-    }
-    return poly;
-  });
+        shownMarkers.push(
+          new google.maps.Marker({
+            position: routePath[routePath.length - 1],
+            label: "F",
+            map: map,
+          })
+        );
+      }
+      return poly;
+    });
 
-  chartDataHandler(await GetChartData(map, currentMetro, currentAlgo));
-}, 100);
+    chartDataHandler(await GetChartData(map, metro, algo));
+  },
+  100
+);
 
 function registerHandlers(newChartDataHandler) {
   chartDataHandler = newChartDataHandler;
