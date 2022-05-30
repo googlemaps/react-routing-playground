@@ -28,7 +28,7 @@ import { debounce } from "lodash";
 import { fitToMetroBounds } from "./Data";
 
 const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
-let map;
+let googleMap;
 let shownPolys = [];
 let shownMarkers = [];
 let chartDataHandler;
@@ -50,12 +50,105 @@ function initializeMapObject(element) {
   });
 }
 
-function MyMapComponent({ metro, algo }) {
+function MyMapComponent({ metro, algo, regenData }) {
   const ref = useRef();
+
+  /*
+   * Handler for timewindow change.  Updates global min/max date globals
+   * and recomputes the paths as well as all the bubble markers to respect the
+   * new date values.
+   *
+   * Debounced to every 100ms as a blance between performance and reactivity when
+   * the slider is dragged.
+   */
+  const onStateChangeDebounced = debounce(async (regenerate = false) => {
+    if (!window.google) {
+      // not loaded yet?
+      return;
+    }
+    console.log("State changed", metro, algo);
+    shownPolys.forEach((poly) => poly.setMap(null));
+    shownMarkers.forEach((marker) => marker.setMap(null));
+    shownMarkers = [];
+    let routes = await GetRoutes(googleMap, metro, algo, regenerate);
+    shownPolys = routes.map((route) => {
+      const routePath = route.getPath();
+      const poly = new google.maps.Polyline({
+        path: route.getPath(),
+        strokeColor: "#000000",
+        strokeOpacity: routes.length > 10 ? 0.15 : 0.5,
+        strokeWeight: 5,
+        icons: [
+          {
+            icon: startSymbol,
+            offset: "0%",
+          },
+          {
+            icon: {
+              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+              scale: 4,
+              strokeWeight: 2,
+            },
+
+            offset: "50%",
+          },
+          {
+            icon: endSymbol,
+            offset: "100%",
+          },
+        ],
+      });
+      poly.setMap(googleMap);
+      google.maps.event.addListener(poly, "mouseover", () => {
+        poly.setOptions({
+          strokeOpacity: 0.75,
+          strokeWeight: 8,
+          strokeColor: "#00FFc0",
+        });
+      });
+      google.maps.event.addListener(poly, "mouseout", () => {
+        poly.setOptions({
+          strokeOpacity: 0.25,
+          strokeColor: "#000000",
+          strokeWeight: 5,
+        });
+      });
+      const waypoints = route.getWaypointMarkers();
+      if (waypoints.length > 1) {
+        waypoints.map((markerLoc, idx) => {
+          shownMarkers.push(
+            new google.maps.Marker({
+              position: markerLoc,
+              // Humans like to start with 1
+              label: (idx + 1).toString(),
+              map: googleMap,
+            })
+          );
+        });
+        shownMarkers.push(
+          new google.maps.Marker({
+            position: routePath[0],
+            label: "S",
+            map: googleMap,
+          })
+        );
+        shownMarkers.push(
+          new google.maps.Marker({
+            position: routePath[routePath.length - 1],
+            label: "F",
+            map: googleMap,
+          })
+        );
+      }
+      return poly;
+    });
+
+    chartDataHandler(await GetChartData(googleMap, metro, algo));
+  }, 100);
 
   useEffect(() => {
     console.log("Gots apikey", apiKey);
-    map = initializeMapObject(ref.current);
+    googleMap = initializeMapObject(ref.current);
 
     // Polygons should really have a getBounds method (v2 maps did).
     // See https://stackoverflow.com/questions/3284808/getting-the-bounds-of-a-polyline-in-google-maps-api-v3
@@ -80,20 +173,27 @@ function MyMapComponent({ metro, algo }) {
   useEffect(() => {
     console.log("on metro change", metro);
     if (window.google && window.google.maps) {
-      fitToMetroBounds(map, metro);
+      fitToMetroBounds(googleMap, metro);
     }
-    onStateChangeDebounced(metro, algo);
+    onStateChangeDebounced();
   }, [metro]);
 
   useEffect(() => {
     console.log("on algo change", algo);
-    onStateChangeDebounced(metro, algo);
+    onStateChangeDebounced();
   }, [algo]);
+
+  useEffect(() => {
+    if (regenData) {
+      console.log("regenerating data for current algo / metro");
+      onStateChangeDebounced(/*regenerate =*/ true);
+    }
+  }, [regenData]);
 
   return <div ref={ref} id="map" style={{ height: "1024px" }} />;
 }
 
-function Map({ metro, algo }) {
+function Map({ metro, algo, regenData }) {
   return (
     <Wrapper
       apiKey={apiKey}
@@ -101,14 +201,9 @@ function Map({ metro, algo }) {
       version="beta"
       libraries={["geometry", "journeySharing"]}
     >
-      <MyMapComponent metro={metro} algo={algo} />
+      <MyMapComponent metro={metro} algo={algo} regenData={regenData} />
     </Wrapper>
   );
-}
-
-function onInitializeRegen(metro, algo) {
-  console.log("regenerating data for current algo / metro");
-  onStateChangeDebounced(metro, algo, /*regenerate =*/ true);
 }
 
 const startSymbol = {
@@ -137,104 +232,8 @@ const endSymbol = {
 };
 */
 
-/*
- * Handler for timewindow change.  Updates global min/max date globals
- * and recomputes the paths as well as all the bubble markers to respect the
- * new date values.
- *
- * Debounced to every 100ms as a blance between performance and reactivity when
- * the slider is dragged.
- */
-const onStateChangeDebounced = debounce(
-  async (metro, algo, regenerate = false) => {
-    if (!window.google) {
-      // not loaded yet?
-      return;
-    }
-    console.log("State changed", metro, algo);
-    shownPolys.forEach((poly) => poly.setMap(null));
-    shownMarkers.forEach((marker) => marker.setMap(null));
-    shownMarkers = [];
-    let routes = await GetRoutes(map, metro, algo, regenerate);
-    shownPolys = routes.map((route) => {
-      const routePath = route.getPath();
-      const poly = new google.maps.Polyline({
-        path: route.getPath(),
-        strokeColor: "#000000",
-        strokeOpacity: routes.length > 10 ? 0.15 : 0.5,
-        strokeWeight: 5,
-        icons: [
-          {
-            icon: startSymbol,
-            offset: "0%",
-          },
-          {
-            icon: {
-              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-              scale: 4,
-              strokeWeight: 2,
-            },
-
-            offset: "50%",
-          },
-          {
-            icon: endSymbol,
-            offset: "100%",
-          },
-        ],
-      });
-      poly.setMap(map);
-      google.maps.event.addListener(poly, "mouseover", () => {
-        poly.setOptions({
-          strokeOpacity: 0.75,
-          strokeWeight: 8,
-          strokeColor: "#00FFc0",
-        });
-      });
-      google.maps.event.addListener(poly, "mouseout", () => {
-        poly.setOptions({
-          strokeOpacity: 0.25,
-          strokeColor: "#000000",
-          strokeWeight: 5,
-        });
-      });
-      const waypoints = route.getWaypointMarkers();
-      if (waypoints.length > 1) {
-        waypoints.map((markerLoc, idx) => {
-          shownMarkers.push(
-            new google.maps.Marker({
-              position: markerLoc,
-              // Humans like to start with 1
-              label: (idx + 1).toString(),
-              map: map,
-            })
-          );
-        });
-        shownMarkers.push(
-          new google.maps.Marker({
-            position: routePath[0],
-            label: "S",
-            map: map,
-          })
-        );
-        shownMarkers.push(
-          new google.maps.Marker({
-            position: routePath[routePath.length - 1],
-            label: "F",
-            map: map,
-          })
-        );
-      }
-      return poly;
-    });
-
-    chartDataHandler(await GetChartData(map, metro, algo));
-  },
-  100
-);
-
 function registerHandlers(newChartDataHandler) {
   chartDataHandler = newChartDataHandler;
 }
 
-export { Map as default, registerHandlers, onInitializeRegen };
+export { Map as default, registerHandlers };
