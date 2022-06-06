@@ -19,16 +19,5 @@
  */
 import ReactDOM from "react-dom";
 import App from "./App";
-import Map from "./Map";
 
-ReactDOM.render(
-  <div>
-    <div style={{ width: "100%" }}>
-      <App />
-    </div>
-    <div style={{ marginLeft: "300px" }}>
-      <Map />
-    </div>
-  </div>,
-  document.getElementById("root")
-);
+ReactDOM.render(<App />, document.getElementById("root"));

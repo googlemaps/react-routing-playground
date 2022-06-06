@@ -21,12 +21,7 @@
  * propagation for state changes into the non-react map
  */
 import React from "react";
-import {
-  onMetroChange,
-  onAlgoChange,
-  onInitializeRegen,
-  registerHandlers,
-} from "./Map";
+import Map from "./Map";
 import Select from "react-select";
 import { algoOptions, metroOptions } from "./Data";
 import { find, debounce, findIndex, filter } from "lodash";
@@ -59,14 +54,14 @@ class App extends React.Component {
       selectedMetroOption: getDefault(metroOptions, "metro"),
       selectedAlgoOption: getDefault(algoOptions, "algo"),
       showSpinner: true,
+      regenData: false,
       chartData: {
         latencyData: [],
         durationData: [],
         distanceData: [],
       },
     };
-    onMetroChange(this.state.selectedMetroOption.value);
-    onAlgoChange(this.state.selectedAlgoOption.value);
+
     if (!keyboardListener) {
       keyboardListener = document.addEventListener(
         "keydown",
@@ -93,35 +88,35 @@ class App extends React.Component {
 
     this.handleMetroChange = (selectedMetroOption) => {
       this.setState({ showSpinner: true, selectedMetroOption }, () => {
-        onMetroChange(this.state.selectedMetroOption.value);
         setQueryStringValue("metro", this.state.selectedMetroOption.value);
       });
     };
 
     this.handleAlgoChange = (selectedAlgoOption) => {
       this.setState({ showSpinner: true, selectedAlgoOption }, () => {
-        onAlgoChange(this.state.selectedAlgoOption.value);
         setQueryStringValue("algo", this.state.selectedAlgoOption.value);
       });
     };
 
     this.regenerateData = () => {
-      this.setState({ showSpinner: true }, () => {
-        onInitializeRegen();
-      });
+      this.setState({ showSpinner: true, regenData: true });
     };
 
-    // There must be a better way to handle cross
-    // component communication
-    registerHandlers((chartData) => {
+    this.onChartDataUpdate = (chartData) => {
       this.setState((prevState) => {
-        prevState.showSpinner = false;
-        prevState.chartData.latencyData = chartData.latencyData;
-        prevState.chartData.distanceData = chartData.distanceData;
-        prevState.chartData.durationData = chartData.durationData;
-        return prevState;
+        return {
+          selectedMetroOption: prevState.selectedMetroOption,
+          selectedAlgoOption: prevState.selectedAlgoOption,
+          showSpinner: false,
+          regenData: false,
+          chartData: {
+            latencyData: chartData.latencyData,
+            distanceData: chartData.distanceData,
+            durationData: chartData.durationData,
+          },
+        };
       });
-    });
+    };
 
     this.downloadData = async () => {
       const metro = this.state.selectedMetroOption.value;
@@ -148,13 +143,13 @@ class App extends React.Component {
 
   render() {
     return (
-      <span>
-        <Select
-          value={this.state.selectedAlgoOption}
-          onChange={this.handleAlgoChange}
-          options={filter(algoOptions, { enabled: true })}
-        />
-        <div>
+      <div>
+        <div style={{ width: "100%" }}>
+          <Select
+            value={this.state.selectedAlgoOption}
+            onChange={this.handleAlgoChange}
+            options={filter(algoOptions, { enabled: true })}
+          />
           <div style={{ width: "300px", float: "left" }}>
             <Select
               value={this.state.selectedMetroOption}
@@ -177,7 +172,15 @@ class App extends React.Component {
             <button onClick={this.downloadData}>Download</button>
           </div>
         </div>
-      </span>
+        <div style={{ marginLeft: "300px" }}>
+          <Map
+            metro={this.state.selectedMetroOption.value}
+            algo={this.state.selectedAlgoOption.value}
+            regenData={this.state.regenData}
+            onChartDataUpdate={this.onChartDataUpdate}
+          />
+        </div>
+      </div>
     );
   }
 }
