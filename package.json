@@ -27,7 +27,7 @@
     "@typescript-eslint/parser": "^5.2.0",
     "eslint": "^8.15.0",
     "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-jest": "^25.2.2",
+    "eslint-plugin-jest": "^26.5.3",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-react": "^7.26.1",
     "prettier": "^2.4.1",
@@ -39,7 +39,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint .",
-    "format": "eslint . --fix"
+    "format": "eslint . --fix",
+    "docs": "echo NOT IMPLEMENTED"
   },
   "proxy": "http://localhost:4040",
   "eslintConfig": {
