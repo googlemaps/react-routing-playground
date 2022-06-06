@@ -39,7 +39,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint .",
-    "format": "eslint . --fix"
+    "format": "eslint . --fix",
+    "docs": "echo NOT IMPLEMENTED"
   },
   "proxy": "http://localhost:4040",
   "eslintConfig": {
