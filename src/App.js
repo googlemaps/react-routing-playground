@@ -30,6 +30,9 @@ import Loader from "react-loader-spinner";
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import { GetRoutes, getCacheKey } from "./Algos";
 import { getQueryStringValue, setQueryStringValue } from "./queryString";
+import JSONInput from "react-json-editor-ajrm/index";
+import locale from "react-json-editor-ajrm/locale/en";
+import ReactModal from "react-modal";
 
 let keyboardListener;
 
@@ -55,6 +58,7 @@ class App extends React.Component {
       selectedAlgoOption: getDefault(algoOptions, "algo"),
       showSpinner: true,
       regenData: false,
+      showEditor: false,
       chartData: {
         latencyData: [],
         durationData: [],
@@ -102,6 +106,14 @@ class App extends React.Component {
       this.setState({ showSpinner: true, regenData: true });
     };
 
+    this.openEditor = () => {
+      this.setState({ showEditor: true });
+    };
+
+    this.closeEditor = () => {
+      this.setState({ showEditor: false });
+    };
+
     this.onChartDataUpdate = (chartData) => {
       this.setState((prevState) => {
         return {
@@ -145,6 +157,20 @@ class App extends React.Component {
     return (
       <div>
         <div style={{ width: "100%" }}>
+          <ReactModal
+            isOpen={this.state.showEditor}
+            contentLabel="Minimal Modal Example"
+          >
+            <JSONInput
+              theme="light_mitsuketa_tribute"
+              locale={locale}
+              colors={{
+                string: "#DAA520", // overrides theme colors with whatever color value you want
+              }}
+              height="550px"
+            />
+            <button onClick={this.closeEditor}>Close Editor</button>
+          </ReactModal>
           <Select
             value={this.state.selectedAlgoOption}
             onChange={this.handleAlgoChange}
@@ -157,6 +183,8 @@ class App extends React.Component {
               options={filter(metroOptions, { enabled: true })}
             />
             <button onClick={this.regenerateData}>Regenerate</button>
+            <button onClick={this.openEditor}>JSON Editor</button>
+
             <Loader
               type="Audio"
               color="#00BFFF"
