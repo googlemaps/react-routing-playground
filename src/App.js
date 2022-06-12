@@ -23,8 +23,7 @@
 
 import { find, debounce, findIndex, filter } from "lodash";
 import React from "react";
-import JSONInput from "react-json-editor-ajrm/index";
-import locale from "react-json-editor-ajrm/locale/en";
+import ReactJson from "react-json-view";
 import Loader from "react-loader-spinner";
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import ReactModal from "react-modal";
@@ -189,7 +188,7 @@ class App extends React.Component {
     };
 
     this.onJsonChange = (content) => {
-      this.setState({ jsonContent: content.jsObject });
+      this.setState({ jsonContent: content.updated_src });
     };
 
     this.onChartDataUpdate = (chartData) => {
@@ -239,11 +238,11 @@ class App extends React.Component {
             isOpen={this.state.showEditor}
             contentLabel="Minimal Modal Example"
           >
-            <JSONInput
-              locale={locale}
-              placeholder={this.state.jsonContent}
-              waitAfterKeyPress={2000}
-              onChange={this.onJsonChange}
+            <ReactJson
+              src={this.state.jsonContent}
+              onEdit={this.onJsonChange}
+              onAdd={this.onJsonChange}
+              onDelete={this.onJsonChange}
             />
             <button onClick={this.closeEditor}>Cancel</button>
             <button onClick={this.submitJson}>OK</button>
