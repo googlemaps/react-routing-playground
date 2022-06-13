@@ -71,9 +71,9 @@ class App extends React.Component {
       },
       jsonContent: {
         value: "create_your_algo_name",
-        method: "e.g. RoutesPreferred or DirectionsJsSDK",
-        travelMode: "e.g. DRIVE (or DRIVING if using DirectionsJsSDK)",
-        routingPreference: "e.g. TRAFFIC_AWARE",
+        method: "RoutesPreferred or DirectionsJsSDK",
+        travelMode: "DRIVE (or DRIVING if using DirectionsJsSDK)",
+        routingPreference: "TRAFFIC_AWARE",
         numRoutes: 10,
         numWaypoints: 2,
         options: {},
@@ -241,6 +241,9 @@ class App extends React.Component {
               locale={locale}
               placeholder={this.state.jsonContent}
               waitAfterKeyPress={2000}
+              theme={"light_mitsuketa_tribute"}
+              colors={{ default: "#888888" }}
+              style={{ body: { fontSize: "16px" } }}
               onChange={this.onJsonChange}
             />
             <button onClick={this.closeEditor}>Cancel</button>
