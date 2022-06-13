@@ -38,7 +38,6 @@ import { RouteCharts } from "./RouteCharts";
 import { computeRoutesPreferred } from "./RoutesPreferred";
 
 let keyboardListener;
-ReactModal.setAppElement("#root");
 
 class App extends React.Component {
   constructor(props) {
@@ -71,7 +70,6 @@ class App extends React.Component {
       },
       jsonContent: {
         value: "create_your_algo_name",
-        label: "Create your label",
         method: "e.g. RoutesPreferred or DirectionsJsSDK",
         travelMode: "e.g. DRIVE (or DRIVING if using DirectionsJsSDK)",
         routingPreference: "e.g. TRAFFIC_AWARE",
