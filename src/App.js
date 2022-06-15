@@ -34,7 +34,7 @@ import { GetRoutes, getCacheKey } from "./Algos";
 import { algoOptions, metroOptions } from "./Data";
 import { computeRoutesDirectionsJsSDK } from "./DirectionsJsSDK";
 import Map from "./Map";
-import { getQueryStringValue, setQueryStringValue } from "./queryString";
+import { getQueryStringValue, setQueryStringValue } from "./utils/queryString";
 import { RouteCharts } from "./RouteCharts";
 import { computeRoutesPreferred } from "./RoutesPreferred";
 

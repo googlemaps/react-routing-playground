@@ -16,7 +16,7 @@
 
 const cache = {};
 import { getOriginDestinationPairs } from "./Data";
-import { RouteData } from "./RouteData";
+import { RouteData } from "./dataModel/routeData";
 import { algoOptions } from "./Data";
 import { find } from "lodash";
 

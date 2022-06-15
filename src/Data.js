@@ -19,7 +19,7 @@
  *
  */
 import { times, find } from "lodash";
-import { randLatLngInPolygon } from "./Random";
+import { randLatLngInPolygon } from "./utils/random";
 import { computeRoutesDirectionsJsSDK } from "./DirectionsJsSDK";
 import { computeRoutesPreferred } from "./RoutesPreferred";
 
