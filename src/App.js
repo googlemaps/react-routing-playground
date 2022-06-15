@@ -58,7 +58,6 @@ class App extends React.Component {
     }
 
     this.state = {
-      algoOptions: [...algoOptions],
       selectedMetroOption: getDefault(metroOptions, "metro"),
       selectedAlgoOption: getDefault(algoOptions, "algo"),
       showSpinner: true,
@@ -88,20 +87,17 @@ class App extends React.Component {
           console.log(
             `Key: ${event.key} with keycode ${event.keyCode} has been pressed`
           );
-          const curAlgoIdx = findIndex(this.state.algoOptions, {
+          const curAlgoIdx = findIndex(algoOptions, {
             value: this.state.selectedAlgoOption.value,
           });
           console.log("gots curAlgoIdx", curAlgoIdx);
-          if (
-            event.key == "ArrowDown" &&
-            curAlgoIdx < this.state.algoOptions.length - 1
-          ) {
-            console.log("new Alog", this.state.algoOptions[curAlgoIdx + 1]);
-            this.handleAlgoChange(this.state.algoOptions[curAlgoIdx + 1]);
+          if (event.key == "ArrowDown" && curAlgoIdx < algoOptions.length - 1) {
+            console.log("new Alog", algoOptions[curAlgoIdx + 1]);
+            this.handleAlgoChange(algoOptions[curAlgoIdx + 1]);
           }
           if (event.key == "ArrowUp" && curAlgoIdx > 0) {
-            console.log("new Alog", this.state.algoOptions[curAlgoIdx - 1]);
-            this.handleAlgoChange(this.state.algoOptions[curAlgoIdx - 1]);
+            console.log("new Alog", algoOptions[curAlgoIdx - 1]);
+            this.handleAlgoChange(algoOptions[curAlgoIdx - 1]);
           }
         }),
         50
@@ -136,7 +132,7 @@ class App extends React.Component {
       // TODO: Perform more validation
       const customObject = this.state.jsonContent;
       const value = customObject.value;
-      if (find(this.state.algoOptions, { value: value })) {
+      if (find(algoOptions, { value: value })) {
         alert(
           "Algo value " +
             value +
@@ -177,7 +173,6 @@ class App extends React.Component {
         {
           showEditor: false,
           showSpinner: true,
-          algoOptions: [...this.state.algoOptions, newAlgoOption],
           selectedAlgoOption: newAlgoOption,
         },
         () => {
@@ -209,7 +204,7 @@ class App extends React.Component {
     this.downloadData = async () => {
       const metro = this.state.selectedMetroOption.value;
       const algo = this.state.selectedAlgoOption.value;
-      const algoDefinition = find(this.state.algoOptions, { value: algo });
+      const algoDefinition = find(algoOptions, { value: algo });
       const fileName =
         getCacheKey(metro, algo, algoDefinition.numRoutes) + ".json";
       const text = JSON.stringify(await GetRoutes({}, metro, algo));
@@ -252,7 +247,7 @@ class App extends React.Component {
           <Select
             value={this.state.selectedAlgoOption}
             onChange={this.handleAlgoChange}
-            options={filter(this.state.algoOptions, { enabled: true })}
+            options={filter(algoOptions, { enabled: true })}
           />
           <div style={{ width: "300px", float: "left" }}>
             <Select
