@@ -31,12 +31,12 @@ import ReactModal from "react-modal";
 import Select from "react-select";
 
 import { GetRoutes, getCacheKey } from "./Algos";
-import { algoOptions, metroOptions } from "./Data";
-import { computeRoutesDirectionsJsSDK } from "./DirectionsJsSDK";
+import { algoOptions, metroOptions } from "./dataModel/data";
+import { computeRoutesDirectionsJsSDK } from "./apis/directionsJsSDK";
 import Map from "./Map";
 import { getQueryStringValue, setQueryStringValue } from "./utils/queryString";
 import { RouteCharts } from "./RouteCharts";
-import { computeRoutesPreferred } from "./RoutesPreferred";
+import { computeRoutesPreferred } from "./apis/routesPreferred";
 
 let keyboardListener;
 

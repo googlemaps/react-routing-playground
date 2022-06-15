@@ -25,7 +25,7 @@ import { Wrapper, Status } from "@googlemaps/react-wrapper";
 import { useEffect, useRef } from "react";
 import { GetRoutes, GetChartData } from "./Algos";
 import { debounce } from "lodash";
-import { fitToMetroBounds } from "./Data";
+import { fitToMetroBounds } from "./dataModel/data";
 
 const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 let googleMap;

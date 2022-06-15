@@ -19,9 +19,9 @@
  *
  */
 import { times, find } from "lodash";
-import { randLatLngInPolygon } from "./utils/random";
-import { computeRoutesDirectionsJsSDK } from "./DirectionsJsSDK";
-import { computeRoutesPreferred } from "./RoutesPreferred";
+import { randLatLngInPolygon } from "../utils/random";
+import { computeRoutesDirectionsJsSDK } from "../apis/directionsJsSDK";
+import { computeRoutesPreferred } from "../apis/routesPreferred";
 
 const algoOptions = [
   {

@@ -15,9 +15,9 @@
  */
 
 const cache = {};
-import { getOriginDestinationPairs } from "./Data";
+import { getOriginDestinationPairs } from "./dataModel/data";
 import { RouteData } from "./dataModel/routeData";
-import { algoOptions } from "./Data";
+import { algoOptions } from "./dataModel/data";
 import { find } from "lodash";
 
 function getCacheKey(metro, algo, numRoutes, numWaypoints) {
