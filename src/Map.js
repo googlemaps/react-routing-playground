@@ -23,7 +23,7 @@
  */
 import { Wrapper, Status } from "@googlemaps/react-wrapper";
 import { useEffect, useRef } from "react";
-import { GetRoutes, GetChartData } from "./Algos";
+import { GetRoutes, GetChartData } from "./dataModel/algoFns";
 import { debounce } from "lodash";
 import { fitToMetroBounds } from "./dataModel/data";
 
@@ -49,7 +49,13 @@ function initializeMapObject(element) {
   });
 }
 
-function MyMapComponent({ metro, algo, regenData, onChartDataUpdate }) {
+function MyMapComponent({
+  metro,
+  algoId,
+  algoDefinition,
+  regenData,
+  onChartDataUpdate,
+}) {
   const ref = useRef();
 
   /*
@@ -65,11 +71,17 @@ function MyMapComponent({ metro, algo, regenData, onChartDataUpdate }) {
       // not loaded yet?
       return;
     }
-    console.log("State changed", metro, algo);
+    console.log("State changed", metro, algoId);
     shownPolys.forEach((poly) => poly.setMap(null));
     shownMarkers.forEach((marker) => marker.setMap(null));
     shownMarkers = [];
-    let routes = await GetRoutes(googleMap, metro, algo, regenerate);
+    let routes = await GetRoutes(
+      googleMap,
+      metro,
+      algoId,
+      algoDefinition,
+      regenerate
+    );
     shownPolys = routes.map((route) => {
       const routePath = route.getPath();
       const poly = new google.maps.Polyline({
@@ -142,7 +154,9 @@ function MyMapComponent({ metro, algo, regenData, onChartDataUpdate }) {
       return poly;
     });
 
-    onChartDataUpdate(await GetChartData(googleMap, metro, algo));
+    onChartDataUpdate(
+      await GetChartData(googleMap, metro, algoId, algoDefinition)
+    );
   }, 100);
 
   useEffect(() => {
@@ -178,9 +192,9 @@ function MyMapComponent({ metro, algo, regenData, onChartDataUpdate }) {
   }, [metro]);
 
   useEffect(() => {
-    console.log("on algo change", algo);
+    console.log("on algo change", algoId);
     onStateChangeDebounced();
-  }, [algo]);
+  }, [algoId]);
 
   useEffect(() => {
     if (regenData) {
@@ -202,7 +216,8 @@ function Map(props) {
     >
       <MyMapComponent
         metro={props.metro}
-        algo={props.algo}
+        algoId={props.algoId}
+        algoDefinition={props.algoDefinition}
         regenData={props.regenData}
         onChartDataUpdate={props.onChartDataUpdate}
       />

@@ -21,7 +21,7 @@
  * propagation for state changes into the non-react map
  */
 
-import { find, debounce, findIndex, filter } from "lodash";
+import { debounce, find, filter } from "lodash";
 import React from "react";
 import JSONInput from "react-json-editor-ajrm/index";
 import locale from "react-json-editor-ajrm/locale/en";
@@ -30,13 +30,12 @@ import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import ReactModal from "react-modal";
 import Select from "react-select";
 
-import { GetRoutes, getCacheKey } from "./Algos";
-import { algoOptions, metroOptions } from "./dataModel/data";
-import { computeRoutesDirectionsJsSDK } from "./apis/directionsJsSDK";
+import { GetRoutes, getCacheKey } from "./dataModel/algoFns";
+import { seedAlgos, addAlgo } from "./dataModel/algoModel";
+import { metroOptions } from "./dataModel/data";
 import Map from "./Map";
 import { getQueryStringValue, setQueryStringValue } from "./utils/queryString";
 import { RouteCharts } from "./RouteCharts";
-import { computeRoutesPreferred } from "./apis/routesPreferred";
 
 let keyboardListener;
 
@@ -57,9 +56,19 @@ class App extends React.Component {
       return defaultSelection;
     }
 
+    let allAlgos = seedAlgos();
+    let selectedAlgoId = Object.keys(allAlgos)[0];
+    const urlAlgoStr = getQueryStringValue("algo");
+    if (urlAlgoStr) {
+      const { id, newAlgos } = addAlgo(allAlgos, JSON.parse(urlAlgoStr));
+      allAlgos = newAlgos;
+      selectedAlgoId = id;
+    }
+
     this.state = {
+      algos: allAlgos,
+      selectedAlgoId: selectedAlgoId,
       selectedMetroOption: getDefault(metroOptions, "metro"),
-      selectedAlgoOption: getDefault(algoOptions, "algo"),
       showSpinner: true,
       regenData: false,
       showEditor: false,
@@ -68,15 +77,7 @@ class App extends React.Component {
         durationData: [],
         distanceData: [],
       },
-      jsonContent: {
-        value: "create_your_algo_name",
-        method: "RoutesPreferred or DirectionsJsSDK",
-        travelMode: "DRIVE (or DRIVING if using DirectionsJsSDK)",
-        routingPreference: "TRAFFIC_AWARE",
-        numRoutes: 10,
-        numWaypoints: 2,
-        options: {},
-      },
+      jsonContent: {},
     };
 
     if (!keyboardListener) {
@@ -87,17 +88,16 @@ class App extends React.Component {
           console.log(
             `Key: ${event.key} with keycode ${event.keyCode} has been pressed`
           );
-          const curAlgoIdx = findIndex(algoOptions, {
-            value: this.state.selectedAlgoOption.value,
-          });
+          const algoIds = Object.keys(this.state.algos);
+          const curAlgoIdx = algoIds.indexOf(this.state.selectedAlgoId);
           console.log("gots curAlgoIdx", curAlgoIdx);
-          if (event.key == "ArrowDown" && curAlgoIdx < algoOptions.length - 1) {
-            console.log("new Alog", algoOptions[curAlgoIdx + 1]);
-            this.handleAlgoChange(algoOptions[curAlgoIdx + 1]);
+          if (event.key == "ArrowDown" && curAlgoIdx < algoIds.length - 1) {
+            console.log("new Algo", this.state.algos[algoIds[curAlgoIdx + 1]]);
+            this.handleAlgoChange({ value: algoIds[curAlgoIdx + 1] });
           }
           if (event.key == "ArrowUp" && curAlgoIdx > 0) {
-            console.log("new Alog", algoOptions[curAlgoIdx - 1]);
-            this.handleAlgoChange(algoOptions[curAlgoIdx - 1]);
+            console.log("new Algo", this.state.algos[algoIds[curAlgoIdx - 1]]);
+            this.handleAlgoChange({ value: algoIds[curAlgoIdx - 1] });
           }
         }),
         50
@@ -110,9 +110,10 @@ class App extends React.Component {
       });
     };
 
-    this.handleAlgoChange = (selectedAlgoOption) => {
-      this.setState({ showSpinner: true, selectedAlgoOption }, () => {
-        setQueryStringValue("algo", this.state.selectedAlgoOption.value);
+    this.handleAlgoChange = (algoOption) => {
+      const algoId = algoOption.value;
+      this.setState({ showSpinner: true, selectedAlgoId: algoId }, () => {
+        setQueryStringValue("algo", JSON.stringify(this.state.algos[algoId]));
       });
     };
 
@@ -130,53 +131,34 @@ class App extends React.Component {
 
     this.submitJson = () => {
       // TODO: Perform more validation
-      const customObject = this.state.jsonContent;
-      const value = customObject.value;
-      if (find(algoOptions, { value: value })) {
+      const { name, api } = this.state.jsonContent;
+      if (find(this.state.algos, { name: name })) {
         alert(
-          "Algo value " +
-            value +
-            " already in use. Please create a different value."
+          `Algo name ${name} already in use. Please create a different value.`
         );
         return;
       }
 
-      const label = customObject.label || customObject.value;
-      const travelMode = customObject.travelMode;
-      const routingPreference = customObject.routingPreference;
-      const options = customObject.options || {};
-      const numRoutes = customObject.numRoutes || 1;
-      const numWaypoints = customObject.numWaypoints;
-      let computeFn;
-      if (customObject.method == "RoutesPreferred") {
-        computeFn = async (pairs) =>
-          computeRoutesPreferred(pairs, travelMode, routingPreference, options);
-      } else if (customObject.method == "DirectionsJsSDK") {
-        computeFn = async (pairs) =>
-          computeRoutesDirectionsJsSDK(pairs, travelMode, options);
-      } else {
+      if (api !== "RoutesPreferred" && api !== "DirectionsJsSDK") {
         alert(
-          "Please enter either 'RoutesPreferred' or 'DirectionsJsSDK' for method."
+          "Please enter either 'RoutesPreferred' or 'DirectionsJsSDK' for api."
         );
         return;
       }
-      const newAlgoOption = {
-        enabled: true,
-        value: value,
-        label: label,
-        numRoutes: numRoutes,
-        numWaypoints: numWaypoints,
-        compute: computeFn,
-      };
-      algoOptions.push(newAlgoOption);
+
+      const { id, newAlgos } = addAlgo(
+        this.state.algos,
+        this.state.jsonContent
+      );
       this.setState(
         {
           showEditor: false,
           showSpinner: true,
-          selectedAlgoOption: newAlgoOption,
+          algos: newAlgos,
+          selectedAlgoId: id,
         },
         () => {
-          setQueryStringValue("algo", newAlgoOption.value);
+          setQueryStringValue("algo", JSON.stringify(this.state.jsonContent));
         }
       );
     };
@@ -186,28 +168,26 @@ class App extends React.Component {
     };
 
     this.onChartDataUpdate = (chartData) => {
-      this.setState((prevState) => {
-        return {
-          selectedMetroOption: prevState.selectedMetroOption,
-          selectedAlgoOption: prevState.selectedAlgoOption,
-          showSpinner: false,
-          regenData: false,
-          chartData: {
-            latencyData: chartData.latencyData,
-            distanceData: chartData.distanceData,
-            durationData: chartData.durationData,
-          },
-        };
+      this.setState({
+        showSpinner: false,
+        regenData: false,
+        chartData: {
+          latencyData: chartData.latencyData,
+          distanceData: chartData.distanceData,
+          durationData: chartData.durationData,
+        },
       });
     };
 
     this.downloadData = async () => {
       const metro = this.state.selectedMetroOption.value;
-      const algo = this.state.selectedAlgoOption.value;
-      const algoDefinition = find(algoOptions, { value: algo });
+      const algoId = this.state.selectedAlgoId;
+      const algoDefinition = this.state.algos[algoId];
       const fileName =
-        getCacheKey(metro, algo, algoDefinition.numRoutes) + ".json";
-      const text = JSON.stringify(await GetRoutes({}, metro, algo));
+        getCacheKey(metro, algoId, algoDefinition.numRoutes) + ".json";
+      const text = JSON.stringify(
+        await GetRoutes({}, metro, algoId, algoDefinition)
+      );
       let element = document.createElement("a");
       element.setAttribute(
         "href",
@@ -225,6 +205,15 @@ class App extends React.Component {
   }
 
   render() {
+    const selectAlgoOptions = Object.entries(this.state.algos).map(
+      ([algoId, algoDefinition]) => ({
+        value: algoId,
+        label: algoDefinition.name,
+      })
+    );
+    const selectedOption = find(selectAlgoOptions, {
+      value: this.state.selectedAlgoId,
+    });
     return (
       <div>
         <div style={{ width: "100%" }}>
@@ -234,7 +223,7 @@ class App extends React.Component {
           >
             <JSONInput
               locale={locale}
-              placeholder={this.state.jsonContent}
+              placeholder={this.state.algos[this.state.selectedAlgoId]}
               waitAfterKeyPress={2000}
               theme={"light_mitsuketa_tribute"}
               colors={{ default: "#888888" }}
@@ -245,9 +234,9 @@ class App extends React.Component {
             <button onClick={this.submitJson}>OK</button>
           </ReactModal>
           <Select
-            value={this.state.selectedAlgoOption}
+            value={selectedOption}
             onChange={this.handleAlgoChange}
-            options={filter(algoOptions, { enabled: true })}
+            options={selectAlgoOptions}
           />
           <div style={{ width: "300px", float: "left" }}>
             <Select
@@ -276,7 +265,8 @@ class App extends React.Component {
         <div style={{ marginLeft: "300px" }}>
           <Map
             metro={this.state.selectedMetroOption.value}
-            algo={this.state.selectedAlgoOption.value}
+            algoId={this.state.selectedAlgoId}
+            algoDefinition={this.state.algos[this.state.selectedAlgoId]}
             regenData={this.state.regenData}
             onChartDataUpdate={this.onChartDataUpdate}
           />

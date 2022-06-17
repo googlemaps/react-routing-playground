@@ -26,28 +26,12 @@ const setQueryStringWithoutPageReload = (qsValue) => {
   window.history.pushState({ path: newurl }, "", newurl);
 };
 
-export const getQueryStringValues = (queryString = window.location.search) => {
-  return qs.parse(queryString);
-};
-
 export const getQueryStringValue = (
   key,
   queryString = window.location.search
 ) => {
-  const values = getQueryStringValues(queryString);
+  const values = qs.parse(queryString);
   return values[key];
-};
-
-export const setQueryStringValues = (
-  obj,
-  queryString = window.location.search
-) => {
-  const values = getQueryStringValues(queryString);
-  const newQsValue = qs.stringify({
-    ...values,
-    ...obj,
-  });
-  setQueryStringWithoutPageReload(`?${newQsValue}`);
 };
 
 export const setQueryStringValue = (
@@ -55,6 +39,10 @@ export const setQueryStringValue = (
   value,
   queryString = window.location.search
 ) => {
-  const obj = { [key]: value };
-  setQueryStringValues(obj, queryString);
+  const values = qs.parse(queryString);
+  const newQsValue = qs.stringify({
+    ...values,
+    [key]: value,
+  });
+  setQueryStringWithoutPageReload(`?${newQsValue}`);
 };
