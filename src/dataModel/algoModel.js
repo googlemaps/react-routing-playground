@@ -1,3 +1,5 @@
+import { findKey } from "lodash";
+
 let nextAlgoId = 0;
 
 /**
@@ -119,13 +121,17 @@ function seedAlgos() {
 }
 
 /**
- * Adds an algo definition to existing algos.
+ * Adds or updates an algo definition given existing algos.
+ * Performs an update if the "name" field matches an existing algo.
+ *
  * @param {Object} algos - The existing algos.
  * @param {Object} algoDefinition - The new algo to add.
  * @returns A new algos object that contains the original and new definitions.
  */
-function addAlgo(algos, algoDefinition) {
-  const id = `custom_algo_${nextAlgoId++}`;
+function addOrUpdateAlgo(algos, algoDefinition) {
+  let id =
+    findKey(algos, { name: algoDefinition.name }) ||
+    `custom_algo_${nextAlgoId++}`;
   return {
     id: id,
     newAlgos: {
@@ -135,22 +141,4 @@ function addAlgo(algos, algoDefinition) {
   };
 }
 
-/**
- * Updates an existing algo definition.
- * @param {*} algos - The existing algos.
- * @param {*} id - The id of the algo to update.
- * @param {*} algoDefinition - The new algo definition to update to.
- * @returns A new algos object with the updated definition.
- */
-function updateAlgoForId(algos, id, algoDefinition) {
-  // Todo: Maybe throw exception if id cannot be found.
-  return {
-    id: id,
-    newAlgos: {
-      ...algos,
-      [id]: algoDefinition,
-    },
-  };
-}
-
-export { seedAlgos, addAlgo, updateAlgoForId };
+export { seedAlgos, addOrUpdateAlgo };

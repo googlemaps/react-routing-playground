@@ -52,11 +52,12 @@ function initializeMapObject(element) {
 function MyMapComponent({
   metro,
   algoId,
-  algoDefinition,
+  algos,
   regenData,
   onChartDataUpdate,
 }) {
   const ref = useRef();
+  const algoDefinition = algos[algoId];
 
   /*
    * Handler for timewindow change.  Updates global min/max date globals
@@ -192,9 +193,14 @@ function MyMapComponent({
   }, [metro]);
 
   useEffect(() => {
-    console.log("on algo change", algoId);
+    console.log("on algo id change", algoId);
     onStateChangeDebounced();
   }, [algoId]);
+
+  useEffect(() => {
+    console.log("on algos change");
+    onStateChangeDebounced(/*regenerate =*/ true);
+  }, [algos]);
 
   useEffect(() => {
     if (regenData) {
@@ -217,7 +223,7 @@ function Map(props) {
       <MyMapComponent
         metro={props.metro}
         algoId={props.algoId}
-        algoDefinition={props.algoDefinition}
+        algos={props.algos}
         regenData={props.regenData}
         onChartDataUpdate={props.onChartDataUpdate}
       />

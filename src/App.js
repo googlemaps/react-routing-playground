@@ -23,16 +23,14 @@
 
 import { debounce, find, filter } from "lodash";
 import React from "react";
-import JSONInput from "react-json-editor-ajrm/index";
-import locale from "react-json-editor-ajrm/locale/en";
 import Loader from "react-loader-spinner";
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
-import ReactModal from "react-modal";
 import Select from "react-select";
 
 import { GetRoutes, getCacheKey } from "./dataModel/algoFns";
-import { seedAlgos, addAlgo } from "./dataModel/algoModel";
+import { seedAlgos, addOrUpdateAlgo } from "./dataModel/algoModel";
 import { metroOptions } from "./dataModel/data";
+import JsonEditor from "./JsonEditor";
 import Map from "./Map";
 import { getQueryStringValue, setQueryStringValue } from "./utils/queryString";
 import { RouteCharts } from "./RouteCharts";
@@ -60,7 +58,10 @@ class App extends React.Component {
     let selectedAlgoId = Object.keys(allAlgos)[0];
     const urlAlgoStr = getQueryStringValue("algo");
     if (urlAlgoStr) {
-      const { id, newAlgos } = addAlgo(allAlgos, JSON.parse(urlAlgoStr));
+      const { id, newAlgos } = addOrUpdateAlgo(
+        allAlgos,
+        JSON.parse(urlAlgoStr)
+      );
       allAlgos = newAlgos;
       selectedAlgoId = id;
     }
@@ -129,27 +130,19 @@ class App extends React.Component {
       this.setState({ showEditor: false });
     };
 
-    this.submitJson = () => {
+    this.submitJson = (content) => {
       // TODO: Perform more validation
-      const { name, api } = this.state.jsonContent;
-      if (find(this.state.algos, { name: name })) {
-        alert(
-          `Algo name ${name} already in use. Please create a different value.`
-        );
-        return;
-      }
-
-      if (api !== "RoutesPreferred" && api !== "DirectionsJsSDK") {
+      if (
+        content.api !== "RoutesPreferred" &&
+        content.api !== "DirectionsJsSDK"
+      ) {
         alert(
           "Please enter either 'RoutesPreferred' or 'DirectionsJsSDK' for api."
         );
         return;
       }
 
-      const { id, newAlgos } = addAlgo(
-        this.state.algos,
-        this.state.jsonContent
-      );
+      const { id, newAlgos } = addOrUpdateAlgo(this.state.algos, content);
       this.setState(
         {
           showEditor: false,
@@ -158,13 +151,9 @@ class App extends React.Component {
           selectedAlgoId: id,
         },
         () => {
-          setQueryStringValue("algo", JSON.stringify(this.state.jsonContent));
+          setQueryStringValue("algo", JSON.stringify(content));
         }
       );
-    };
-
-    this.onJsonChange = (content) => {
-      this.setState({ jsonContent: content.jsObject });
     };
 
     this.onChartDataUpdate = (chartData) => {
@@ -214,59 +203,49 @@ class App extends React.Component {
     const selectedOption = find(selectAlgoOptions, {
       value: this.state.selectedAlgoId,
     });
+
     return (
       <div>
-        <div style={{ width: "100%" }}>
-          <ReactModal
+        <div>
+          <JsonEditor
             isOpen={this.state.showEditor}
-            contentLabel="Editor dialog"
-          >
-            <JSONInput
-              locale={locale}
-              placeholder={this.state.algos[this.state.selectedAlgoId]}
-              waitAfterKeyPress={2000}
-              theme={"light_mitsuketa_tribute"}
-              colors={{ default: "#888888" }}
-              style={{ body: { fontSize: "16px" } }}
-              onChange={this.onJsonChange}
-            />
-            <button onClick={this.closeEditor}>Cancel</button>
-            <button onClick={this.submitJson}>OK</button>
-          </ReactModal>
+            initialJson={this.state.algos[this.state.selectedAlgoId]}
+            onSubmit={this.submitJson}
+            onCancel={this.closeEditor}
+          />
+        </div>
+        <div style={{ width: "300px", float: "left" }}>
           <Select
             value={selectedOption}
             onChange={this.handleAlgoChange}
             options={selectAlgoOptions}
           />
-          <div style={{ width: "300px", float: "left" }}>
-            <Select
-              value={this.state.selectedMetroOption}
-              onChange={this.handleMetroChange}
-              options={filter(metroOptions, { enabled: true })}
-            />
-            <button onClick={this.regenerateData}>Regenerate</button>
-            <button onClick={this.openEditor}>Custom Algo</button>
-
-            <Loader
-              type="Audio"
-              color="#00BFFF"
-              height={100}
-              width={100}
-              timeout={60000} //60 secs
-              visible={this.state.showSpinner}
-            />
-            <RouteCharts
-              hideCharts={this.state.showSpinner}
-              chartData={this.state.chartData}
-            />
-            <button onClick={this.downloadData}>Download</button>
-          </div>
+          <button onClick={this.openEditor}>Add or update...</button>
+          <Select
+            value={this.state.selectedMetroOption}
+            onChange={this.handleMetroChange}
+            options={filter(metroOptions, { enabled: true })}
+          />
+          <button onClick={this.regenerateData}>Regenerate</button>
+          <Loader
+            type="Audio"
+            color="#00BFFF"
+            height={100}
+            width={100}
+            timeout={60000} //60 secs
+            visible={this.state.showSpinner}
+          />
+          <RouteCharts
+            hideCharts={this.state.showSpinner}
+            chartData={this.state.chartData}
+          />
+          <button onClick={this.downloadData}>Download</button>
         </div>
         <div style={{ marginLeft: "300px" }}>
           <Map
             metro={this.state.selectedMetroOption.value}
             algoId={this.state.selectedAlgoId}
-            algoDefinition={this.state.algos[this.state.selectedAlgoId]}
+            algos={this.state.algos}
             regenData={this.state.regenData}
             onChartDataUpdate={this.onChartDataUpdate}
           />
