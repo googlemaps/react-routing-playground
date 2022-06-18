@@ -52,12 +52,11 @@ function initializeMapObject(element) {
 function MyMapComponent({
   metro,
   algoId,
-  algos,
+  algoDefinition,
   regenData,
   onChartDataUpdate,
 }) {
   const ref = useRef();
-  const algoDefinition = algos[algoId];
 
   /*
    * Handler for timewindow change.  Updates global min/max date globals
@@ -76,13 +75,7 @@ function MyMapComponent({
     shownPolys.forEach((poly) => poly.setMap(null));
     shownMarkers.forEach((marker) => marker.setMap(null));
     shownMarkers = [];
-    let routes = await GetRoutes(
-      googleMap,
-      metro,
-      algoId,
-      algoDefinition,
-      regenerate
-    );
+    let routes = await GetRoutes(googleMap, metro, algoDefinition, regenerate);
     shownPolys = routes.map((route) => {
       const routePath = route.getPath();
       const poly = new google.maps.Polyline({
@@ -155,9 +148,7 @@ function MyMapComponent({
       return poly;
     });
 
-    onChartDataUpdate(
-      await GetChartData(googleMap, metro, algoId, algoDefinition)
-    );
+    onChartDataUpdate(await GetChartData(googleMap, metro, algoDefinition));
   }, 100);
 
   useEffect(() => {
@@ -193,14 +184,9 @@ function MyMapComponent({
   }, [metro]);
 
   useEffect(() => {
-    console.log("on algo id change", algoId);
+    console.log("on algo change", algoId);
     onStateChangeDebounced();
-  }, [algoId]);
-
-  useEffect(() => {
-    console.log("on algos change");
-    onStateChangeDebounced(/*regenerate =*/ true);
-  }, [algos]);
+  }, [algoId, algoDefinition]);
 
   useEffect(() => {
     if (regenData) {
@@ -223,7 +209,7 @@ function Map(props) {
       <MyMapComponent
         metro={props.metro}
         algoId={props.algoId}
-        algos={props.algos}
+        algoDefinition={props.algoDefinition}
         regenData={props.regenData}
         onChartDataUpdate={props.onChartDataUpdate}
       />

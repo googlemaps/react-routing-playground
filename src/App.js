@@ -27,7 +27,7 @@ import Loader from "react-loader-spinner";
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import Select from "react-select";
 
-import { GetRoutes, getCacheKey } from "./dataModel/algoFns";
+import { GetRoutes } from "./dataModel/algoFns";
 import { seedAlgos, addOrUpdateAlgo } from "./dataModel/algoModel";
 import { metroOptions } from "./dataModel/data";
 import JsonEditor from "./JsonEditor";
@@ -172,11 +172,8 @@ class App extends React.Component {
       const metro = this.state.selectedMetroOption.value;
       const algoId = this.state.selectedAlgoId;
       const algoDefinition = this.state.algos[algoId];
-      const fileName =
-        getCacheKey(metro, algoId, algoDefinition.numRoutes) + ".json";
-      const text = JSON.stringify(
-        await GetRoutes({}, metro, algoId, algoDefinition)
-      );
+      const fileName = `${metro}_${algoId}_route.json`;
+      const text = JSON.stringify(await GetRoutes({}, metro, algoDefinition));
       let element = document.createElement("a");
       element.setAttribute(
         "href",
@@ -245,7 +242,7 @@ class App extends React.Component {
           <Map
             metro={this.state.selectedMetroOption.value}
             algoId={this.state.selectedAlgoId}
-            algos={this.state.algos}
+            algoDefinition={this.state.algos[this.state.selectedAlgoId]}
             regenData={this.state.regenData}
             onChartDataUpdate={this.onChartDataUpdate}
           />
