@@ -219,7 +219,7 @@ class App extends React.Component {
         <div style={{ width: "100%" }}>
           <ReactModal
             isOpen={this.state.showEditor}
-            contentLabel="Minimal Modal Example"
+            contentLabel="Editor dialog"
           >
             <JSONInput
               locale={locale}

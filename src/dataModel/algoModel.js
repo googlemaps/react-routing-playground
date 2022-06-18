@@ -1,5 +1,9 @@
 let nextAlgoId = 0;
 
+/**
+ * Generates seed algo definition data.
+ * @returns Seed data for algo definitions.
+ */
 function seedAlgos() {
   return {
     rp: {
@@ -67,14 +71,14 @@ function seedAlgos() {
       name: "Directions - 25 waypoints",
       numRoutes: 1,
       numWaypoints: 25,
-      api: "Directions",
+      api: "DirectionsJsSDK",
       travelMode: "DRIVING",
     },
     directions_25_waypoints_optimized: {
       name: "Directions - 25 waypoints (optimized)",
       numRoutes: 1,
       numWaypoints: 25,
-      api: "Directions",
+      api: "DirectionsJsSDK",
       travelMode: "DRIVING",
       options: {
         optimizeWaypoints: true,
@@ -84,19 +88,19 @@ function seedAlgos() {
       name: "Directions - Driving",
       // Directions hits quota issues w/ more than 15
       numRoutes: 15,
-      api: "Directions",
+      api: "DirectionsJsSDK",
       travelMode: "DRIVING",
     },
     directions_bicycle: {
       name: "Directions - Bike",
       numRoutes: 15,
-      api: "Directions",
+      api: "DirectionsJsSDK",
       travelMode: "BICYCLING",
     },
     directions_avoid_highway: {
       name: "Directions - Avoid Highways",
       numRoutes: 15,
-      api: "Directions",
+      api: "DirectionsJsSDK",
       travelMode: "DRIVING",
       options: {
         avoidHighways: true,
@@ -105,7 +109,7 @@ function seedAlgos() {
     directions_avoid_tolls: {
       name: "Directions - Avoid Tolls",
       numRoutes: 15,
-      api: "Directions",
+      api: "DirectionsJsSDK",
       travelMode: "DRIVING",
       options: {
         avoidTolls: true,
@@ -114,6 +118,12 @@ function seedAlgos() {
   };
 }
 
+/**
+ * Adds an algo definition to existing algos.
+ * @param {Object} algos - The existing algos.
+ * @param {Object} algoDefinition - The new algo to add.
+ * @returns A new algos object that contains the original and new definitions.
+ */
 function addAlgo(algos, algoDefinition) {
   const id = `custom_algo_${nextAlgoId++}`;
   return {
@@ -125,6 +135,13 @@ function addAlgo(algos, algoDefinition) {
   };
 }
 
+/**
+ * Updates an existing algo definition.
+ * @param {*} algos - The existing algos.
+ * @param {*} id - The id of the algo to update.
+ * @param {*} algoDefinition - The new algo definition to update to.
+ * @returns A new algos object with the updated definition.
+ */
 function updateAlgoForId(algos, id, algoDefinition) {
   // Todo: Maybe throw exception if id cannot be found.
   return {
