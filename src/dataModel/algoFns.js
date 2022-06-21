@@ -15,13 +15,36 @@
  */
 
 const cache = {};
-import { getOriginDestinationPairs } from "./Data";
-import { RouteData } from "./RouteData";
-import { algoOptions } from "./Data";
-import { find } from "lodash";
+import { getOriginDestinationPairs } from "./data";
+import { RouteData } from "./routeData";
+import { computeRoutesDirectionsJsSDK } from "../apis/directionsJsSDK";
+import { computeRoutesPreferred } from "../apis/routesPreferred";
 
-function getCacheKey(metro, algo, numRoutes, numWaypoints) {
-  return `${metro}_${algo}_${numRoutes}_${numWaypoints}_route`;
+function getCacheKey(metro, algoDefinition) {
+  return `${metro}_${JSON.stringify(algoDefinition)}_route`;
+}
+
+function getComputeFn(algoDefinition) {
+  let computeFn;
+  if (algoDefinition.api === "RoutesPreferred") {
+    computeFn = async (pairs) =>
+      computeRoutesPreferred(
+        pairs,
+        algoDefinition.travelMode,
+        algoDefinition.routingPreference,
+        algoDefinition.options
+      );
+  } else if (algoDefinition.api === "DirectionsJsSDK") {
+    computeFn = async (pairs) =>
+      computeRoutesDirectionsJsSDK(
+        pairs,
+        algoDefinition.travelMode,
+        algoDefinition.options
+      );
+  } else {
+    throw `Unknown algo api: ${algoDefinition.api}. Expected either RoutesPreferred or DirectionsJsSDK`;
+  }
+  return computeFn;
 }
 
 async function fetchData(cacheKey) {
@@ -39,13 +62,12 @@ async function fetchData(cacheKey) {
   return await result.json();
 }
 
-async function GetRoutes(map, metro, algo, clearCache = false) {
-  const algoDefinition = find(algoOptions, { value: algo });
-  const computeFn = algoDefinition.compute;
+async function GetRoutes(map, metro, algoDefinition, clearCache = false) {
+  const computeFn = getComputeFn(algoDefinition);
   const numRoutes = algoDefinition.numRoutes;
   const numWaypoints = algoDefinition.numWaypoints || 0;
   const pairs = getOriginDestinationPairs(map, metro, numRoutes, numWaypoints);
-  const resultKey = getCacheKey(metro, algo, numRoutes, numWaypoints);
+  const resultKey = getCacheKey(metro, algoDefinition);
 
   if (clearCache) {
     // Remove any existing data stored in the cache object or local storage.
@@ -71,13 +93,10 @@ async function GetRoutes(map, metro, algo, clearCache = false) {
   return cache[resultKey];
 }
 
-async function GetChartData(map, metro, algo) {
+async function GetChartData(map, metro, algoDefinition) {
   // assumes that GetRoutes has already computed
   // and cached the data in memory.
-  const algoDefinition = find(algoOptions, { value: algo });
-  const numRoutes = algoDefinition.numRoutes;
-  const numWaypoints = algoDefinition.numWaypoints || 0;
-  const resultKey = getCacheKey(metro, algo, numRoutes, numWaypoints);
+  const resultKey = getCacheKey(metro, algoDefinition);
   const data = cache[resultKey];
   const latencyData = data.map((entry, idx) => [
     "req #" + idx,
@@ -104,4 +123,4 @@ async function GetChartData(map, metro, algo) {
   };
 }
 
-export { GetRoutes, GetChartData, getCacheKey };
+export { GetRoutes, GetChartData };

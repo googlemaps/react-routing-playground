@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { RouteData } from "./RouteData";
+import { RouteData } from "../dataModel/routeData";
 let directionsService;
 
 async function calcRoute(origin, destination, waypoints, travelMode, options) {

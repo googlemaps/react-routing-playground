@@ -15,7 +15,7 @@
  */
 
 import axios from "axios";
-import { RouteData } from "./RouteData";
+import { RouteData } from "../dataModel/routeData";
 const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
 async function calcRoute(
