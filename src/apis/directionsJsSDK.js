@@ -57,17 +57,22 @@ async function computeRoutesDirectionsJsSDK(pairs, travelMode, options = {}) {
   let pair;
   let paths = [];
   while ((pair = pairs.shift())) {
-    const result = await calcRoute(
-      pair.origin,
-      pair.destination,
-      pair.waypoints,
-      travelMode,
-      options
-    );
-    await new Promise((r) => setTimeout(r, 400));
-    if (result) {
-      // sometimes there aren't routes
-      paths.push(result);
+    try {
+      const result = await calcRoute(
+        pair.origin,
+        pair.destination,
+        pair.waypoints,
+        travelMode,
+        options
+      );
+      await new Promise((r) => setTimeout(r, 400));
+      if (result) {
+        // sometimes there aren't routes
+        paths.push(result);
+      }
+    } catch (err) {
+      alert(`${err.name}: ${err.message}`);
+      return paths;
     }
   }
   return paths;

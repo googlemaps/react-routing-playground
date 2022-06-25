@@ -58,14 +58,6 @@ function MyMapComponent({
 }) {
   const ref = useRef();
 
-  /*
-   * Handler for timewindow change.  Updates global min/max date globals
-   * and recomputes the paths as well as all the bubble markers to respect the
-   * new date values.
-   *
-   * Debounced to every 100ms as a blance between performance and reactivity when
-   * the slider is dragged.
-   */
   const onStateChangeDebounced = debounce(async (regenerate = false) => {
     if (!window.google) {
       // not loaded yet?

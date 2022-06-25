@@ -77,13 +77,7 @@ async function calcRoute(
     },
   };
 
-  let result;
-  try {
-    result = await axios(config);
-  } catch (err) {
-    console.log("failed", err);
-    return;
-  }
+  const result = await axios(config);
   const timeAfter = Date.now();
   if (result.data.routes) {
     // sometimes no route returned
@@ -101,17 +95,22 @@ async function computeRoutesPreferred(
   let pair;
   let paths = [];
   while ((pair = pairs.shift())) {
-    const result = await calcRoute(
-      pair.origin,
-      pair.destination,
-      pair.waypoints,
-      travelMode,
-      routingPreference,
-      options
-    );
-    if (result) {
-      // sometimes there aren't routes
-      paths.push(result);
+    try {
+      const result = await calcRoute(
+        pair.origin,
+        pair.destination,
+        pair.waypoints,
+        travelMode,
+        routingPreference,
+        options
+      );
+      if (result) {
+        // sometimes there aren't routes
+        paths.push(result);
+      }
+    } catch (err) {
+      alert(`Server error: ${err.message}`);
+      return paths;
     }
   }
   return paths;
