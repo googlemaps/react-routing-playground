@@ -28,7 +28,12 @@ import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import Select from "react-select";
 
 import { GetRoutes } from "./dataModel/algoFns";
-import { seedAlgos, addOrUpdateAlgo } from "./dataModel/algoModel";
+import {
+  seedAlgos,
+  addAlgo,
+  updateAlgo,
+  deleteAlgo,
+} from "./dataModel/algoModel";
 import { metroOptions } from "./dataModel/data";
 import JsonEditor from "./JsonEditor";
 import Map from "./Map";
@@ -58,10 +63,7 @@ class App extends React.Component {
     let selectedAlgoId = Object.keys(allAlgos)[0];
     const urlAlgoStr = getQueryStringValue("algo");
     if (urlAlgoStr) {
-      const { id, newAlgos } = addOrUpdateAlgo(
-        allAlgos,
-        JSON.parse(urlAlgoStr)
-      );
+      const { id, newAlgos } = addAlgo(allAlgos, JSON.parse(urlAlgoStr));
       allAlgos = newAlgos;
       selectedAlgoId = id;
     }
@@ -73,6 +75,7 @@ class App extends React.Component {
       showSpinner: true,
       regenData: false,
       showEditor: false,
+      editMode: "add",
       chartData: {
         latencyData: [],
         durationData: [],
@@ -122,12 +125,35 @@ class App extends React.Component {
       this.setState({ showSpinner: true, regenData: true });
     };
 
-    this.openEditor = () => {
-      this.setState({ showEditor: true });
+    this.openEditor = (mode) => {
+      this.setState({ showEditor: true, editMode: mode });
     };
 
     this.closeEditor = () => {
       this.setState({ showEditor: false });
+    };
+
+    this.deleteSelectedOption = () => {
+      // Avoid the scenario where we would have empty algos
+      if (Object.keys(this.state.algos).length <= 1) return;
+
+      const { newAlgos } = deleteAlgo(
+        this.state.algos,
+        this.state.selectedAlgoId
+      );
+      const defaultId = Object.keys(newAlgos)[0];
+      this.setState(
+        {
+          algos: newAlgos,
+          selectedAlgoId: defaultId,
+        },
+        () => {
+          setQueryStringValue(
+            "algo",
+            JSON.stringify(this.state.algos[this.state.selectedAlgoId])
+          );
+        }
+      );
     };
 
     this.submitJson = (content) => {
@@ -142,7 +168,11 @@ class App extends React.Component {
         return;
       }
 
-      const { id, newAlgos } = addOrUpdateAlgo(this.state.algos, content);
+      const { id, newAlgos } =
+        this.state.editMode == "add"
+          ? addAlgo(this.state.algos, content)
+          : updateAlgo(this.state.algos, this.state.selectedAlgoId, content);
+
       this.setState(
         {
           showEditor: false,
@@ -217,7 +247,9 @@ class App extends React.Component {
             onChange={this.handleAlgoChange}
             options={selectAlgoOptions}
           />
-          <button onClick={this.openEditor}>Add or update...</button>
+          <button onClick={() => this.openEditor("add")}>Add</button>
+          <button onClick={() => this.openEditor("edit")}>Edit</button>
+          <button onClick={this.deleteSelectedOption}>Delete</button>
           <Select
             value={this.state.selectedMetroOption}
             onChange={this.handleMetroChange}

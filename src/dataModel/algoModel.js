@@ -1,5 +1,3 @@
-import { findKey } from "lodash";
-
 let nextAlgoId = 0;
 
 /**
@@ -121,17 +119,14 @@ function seedAlgos() {
 }
 
 /**
- * Adds or updates an algo definition given existing algos.
- * Performs an update if the "name" field matches an existing algo.
+ * Adds an algo definition given existing algos.
  *
  * @param {Object} algos - The existing algos.
  * @param {Object} algoDefinition - The new algo to add.
- * @returns A new algos object that contains the original and new definitions.
+ * @returns The id created and a new algos object that contains the original and new definitions.
  */
-function addOrUpdateAlgo(algos, algoDefinition) {
-  let id =
-    findKey(algos, { name: algoDefinition.name }) ||
-    `custom_algo_${nextAlgoId++}`;
+function addAlgo(algos, algoDefinition) {
+  let id = `custom_algo_${nextAlgoId++}`;
   return {
     id: id,
     newAlgos: {
@@ -141,4 +136,37 @@ function addOrUpdateAlgo(algos, algoDefinition) {
   };
 }
 
-export { seedAlgos, addOrUpdateAlgo };
+/**
+ * Updates an algo definition given existing algos.
+ *
+ * @param {Object} algos - The existing algos.
+ * @param {string} id - The id of the existing algo to update.
+ * @param {Object} algoDefinition - The algo to add.
+ * @returns The id that was updated and a new algos object that contains the original and updated definitions.
+ */
+function updateAlgo(algos, id, algoDefinition) {
+  return {
+    id: id,
+    newAlgos: {
+      ...algos,
+      [id]: algoDefinition,
+    },
+  };
+}
+
+/**
+ * Deletes an algo definition from the existing algos.
+ *
+ * @param {Object} algos - The existing algos.
+ * @param {string} id - The id of the existing algo to delete.
+ * @returns The id that was deleted and a new algos object that contains the original definitions minus the one deleted.
+ */
+function deleteAlgo(algos, id) {
+  const { [id]: _, ...rest } = algos;
+  return {
+    id: id,
+    newAlgos: rest,
+  };
+}
+
+export { seedAlgos, addAlgo, updateAlgo, deleteAlgo };
