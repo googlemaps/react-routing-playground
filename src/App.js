@@ -28,12 +28,7 @@ import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import Select from "react-select";
 
 import { GetRoutes } from "./dataModel/algoFns";
-import {
-  seedAlgos,
-  addAlgo,
-  updateAlgo,
-  deleteAlgo,
-} from "./dataModel/algoModel";
+import { addAlgo, updateAlgo, deleteAlgo } from "./dataModel/algoModel";
 import { metroOptions } from "./dataModel/data";
 import JsonEditor from "./JsonEditor";
 import Map from "./Map";
@@ -59,7 +54,7 @@ class App extends React.Component {
       return defaultSelection;
     }
 
-    let allAlgos = seedAlgos();
+    let allAlgos = { ...props.algos };
     let selectedAlgoId = Object.keys(allAlgos)[0];
     const urlAlgoStr = getQueryStringValue("algo");
     if (urlAlgoStr) {
