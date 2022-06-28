@@ -20,6 +20,10 @@
 import ReactDOM from "react-dom";
 import App from "./App";
 import ReactModal from "react-modal";
+import { seedAlgos } from "./dataModel/algoModel";
 
 ReactModal.setAppElement("#root");
-ReactDOM.render(<App />, document.getElementById("root"));
+
+seedAlgos().then((algos) => {
+  ReactDOM.render(<App algos={algos} />, document.getElementById("root"));
+});
