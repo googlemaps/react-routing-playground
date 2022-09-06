@@ -35,6 +35,7 @@ class RouteCharts extends React.Component {
     if (this.props.chartData.durationData.length === 1) {
       return <div>No data -- routing method not supported in this region?</div>;
     }
+    console.log("gots chartData", this.props.chartData);
     return (
       <div>
         <Chart
@@ -44,7 +45,7 @@ class RouteCharts extends React.Component {
           loader={<div>Loading Chart</div>}
           data={this.props.chartData.durationData}
           options={{
-            title: "Route Duration (seconds)",
+            title: `Route Duration (seconds)\nmean: ${this.props.chartData.durationMean}`,
             legend: { position: "none" },
             histogram: {
               minValue: 0,
@@ -60,7 +61,7 @@ class RouteCharts extends React.Component {
           loader={<div>Loading Chart</div>}
           data={this.props.chartData.distanceData}
           options={{
-            title: "Route Length (meters)",
+            title: `Route Length (meters)\nmean: ${this.props.chartData.distanceMean}`,
             legend: { position: "none" },
             histogram: {
               minValue: 0,
@@ -76,11 +77,11 @@ class RouteCharts extends React.Component {
           loader={<div>Loading Chart</div>}
           data={this.props.chartData.latencyData}
           options={{
-            title: "Request Latency (milliseconds)",
+            title: `Request Latency (milliseconds)\nmean: ${this.props.chartData.latencyMean}`,
             legend: { position: "none" },
             histogram: {
               minValue: 0,
-              maxValue: 3000,
+              maxValue: 1000,
               maxNumBuckets: 100,
               bucketSize: 30,
               lastBucketPercentile: 5,

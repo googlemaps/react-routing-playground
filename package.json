@@ -44,7 +44,6 @@
     "format": "eslint . --fix",
     "docs": "echo NOT IMPLEMENTED"
   },
-  "proxy": "http://localhost:4040",
   "eslintConfig": {
     "extends": [
       "react-app",

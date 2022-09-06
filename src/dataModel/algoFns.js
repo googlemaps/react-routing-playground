@@ -19,6 +19,7 @@ import { getOriginDestinationPairs } from "./data";
 import { RouteData } from "./routeData";
 import { computeRoutesDirectionsJsSDK } from "../apis/directionsJsSDK";
 import { computeRoutesPreferred } from "../apis/routesPreferred";
+import { meanBy } from "lodash";
 
 function getCacheKey(metro, algoDefinition) {
   return `${metro}_${JSON.stringify(algoDefinition)}_route`;
@@ -118,8 +119,11 @@ async function GetChartData(map, metro, algoDefinition) {
 
   return {
     latencyData: latencyData,
+    latencyMean: meanBy(latencyData.slice(1), (x) => x[1]),
     durationData: durationData,
+    durationMean: meanBy(durationData.slice(1), (x) => x[1]),
     distanceData: distanceData,
+    distanceMean: meanBy(distanceData.slice(1), (x) => x[1]),
   };
 }
 
