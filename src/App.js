@@ -187,8 +187,11 @@ class App extends React.Component {
         regenData: false,
         chartData: {
           latencyData: chartData.latencyData,
+          latencyMean: chartData.latencyMean,
           distanceData: chartData.distanceData,
+          distanceMean: chartData.distanceMean,
           durationData: chartData.durationData,
+          durationMean: chartData.durationMean,
         },
       });
     };
